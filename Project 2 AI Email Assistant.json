@@ -1,0 +1,330 @@
+{
+  "name": "Project 2 AI Email Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "labelIds": [
+            "Label_3015004255864461831"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -912,
+        16
+      ],
+      "id": "f7091f23-71fe-4e7f-a200-153cbb76e4a9",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zDa0tyYPPVpZpXol",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an assistant for a small business inbox. Read the email below and respond ONLY with valid JSON in this exact format: {\"category\": \"Booking Request\" | \"General Question\" | \"Complaint\" | \"Urgent\", \"draftReply\": \"a polite, professional 2-3 sentence reply\"}. \n\nEmail subject: {{ $json.Subject }}\nEmail body: {{ $json.snippet }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -720,
+        16
+      ],
+      "id": "7e4bde67-36bb-43a8-9f06-14b4cf0a4446",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -720,
+        224
+      ],
+      "id": "e39a3845-8c49-4da2-a10b-cb56b6b0b61e",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "eAFDaZotr0vt05Ma",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "66649efb-b1d4-4658-9501-c9341976bd2d",
+              "name": "category",
+              "value": "={{ JSON.parse($json.text) .category}}",
+              "type": "string"
+            },
+            {
+              "id": "77f3805b-ced0-4b23-be34-8f5baa7f9f9c",
+              "name": "drafReply",
+              "value": "={{ JSON.parse($json.text) .draftReply}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -432,
+        16
+      ],
+      "id": "0c5c2de4-4439-486f-a4a4-db22826c72c0",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "19EOtDq06rdxvSwdhgur71bsMMw5yI55BB7xMe2uyjCg",
+          "mode": "list",
+          "cachedResultName": "Untitled spreadsheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19EOtDq06rdxvSwdhgur71bsMMw5yI55BB7xMe2uyjCg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1326107483,
+          "mode": "list",
+          "cachedResultName": "Sheet6",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19EOtDq06rdxvSwdhgur71bsMMw5yI55BB7xMe2uyjCg/edit#gid=1326107483"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "From": "={{ $('Gmail Trigger').item.json.From}}",
+            "Subject": "={{ $('Gmail Trigger').item.json.Subject}}",
+            "Category": "={{ $json.category }}",
+            "DraftReply": "={{ $json.drafReply }}",
+            "ReceivedAt": "={{ $('Gmail Trigger').item.json.To}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "From",
+              "displayName": "From",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "DraftReply",
+              "displayName": "DraftReply",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ReceivedAt",
+              "displayName": "ReceivedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -272,
+        16
+      ],
+      "id": "58615305-5981-4e2e-8fc6-4c53a4133492",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "vtfbjOKCJXJPCFUF",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "541695dd-dfc6-43ef-be9e-7289e039cfe4",
+              "leftValue": "={{ $json.Category }}",
+              "rightValue": "Urgent",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -128,
+        16
+      ],
+      "id": "3bca6913-5ce2-45d4-8ddc-4fbb8fcba6fb",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=URGENT email from {{ $json.From }}:{{ $json.Subject }} — suggested reply drafted, please review immediately.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        96,
+        112
+      ],
+      "id": "08783ff6-8532-4693-9851-8da51b0a8fcd",
+      "name": "Discord",
+      "webhookId": "57008842-0146-43c6-af92-09774fdf2a32",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "KowYpzVSNL1eNTDy",
+          "name": "Discord Webhook account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d85f6b33-ef53-43ce-a065-3c8ec10aa391",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1a2db77ddf2234040b7c371c403e432a217be67de1d79527236088d4484e7dbb"
+  },
+  "nodeGroups": [],
+  "id": "n6JQHxh8Bkksf3Ei",
+  "tags": []
+}
